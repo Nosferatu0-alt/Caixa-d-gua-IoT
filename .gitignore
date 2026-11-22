@@ -1,0 +1,6 @@
+.env
+*.key
+*.secret
+supabase/functions/.env
+.DS_Store
+__MACOSX/

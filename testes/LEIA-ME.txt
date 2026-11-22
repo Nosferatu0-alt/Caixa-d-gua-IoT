@@ -1,0 +1,16 @@
+TESTES MANUAIS DA FUNÇÃO ingest (Supabase > Edge Functions > ingest > Test)
+Método POST. Headers: Content-Type: application/json  e  x-ingest-key: <INGEST_KEY>
+
+ Caso                                             Resultado esperado
+ corpo_api.json (message_id novo)                 201 / inserted true
+ mesmo corpo reenviado                            200 / inserted false
+ x-ingest-key errada                              401 / unauthorized
+ level_percent = 101 (ou distance_cm = 1)         400 / invalid_contract
+ corpo_api_alerta.json                            201 / inserted true  (alert true)
+
+Para uma leitura nova, mude o message_id. Nos testes inválidos nada deve ser inserido.
+Conferir no Supabase: SQL Editor -> supabase/conferir.sql
+
+converter_ca.py: se o certificado do EMQX baixou em formato binário, rode
+  python converter_ca.py emqx-ca.crt
+e cole a saída em wokwi/ca_cert.py.

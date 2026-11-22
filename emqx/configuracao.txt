@@ -1,0 +1,30 @@
+Projeto EMQX: aula13-iot-g01
+Deployment Serverless: iot-g01
+Usuário MQTT: esp32_g01
+Tópico permitido (Publish/Allow): turma/g01/telemetria
+Fallback All Users: # / Publish & Subscribe / Deny
+Conector: supabase_http_g01
+URL do conector: https://REFERENCIA_DO_PROJETO.supabase.co
+Regra (nome/descrição): telemetria_g01
+Ação: post_ingest_g01
+Método: POST
+URL Path: /functions/v1/ingest
+Header Content-Type: application/json
+Header x-ingest-key: copiar do cofre (segredo INGEST_KEY)  <- NUNCA commitar o valor real
+Body: ${.}
+OAuth2: desativado
+TLS: habilitado; verificar certificado do servidor
+CA Cert do conector HTTPS: certificados/supabase-gts-root-r4.pem
+  (baixar em https://pki.goog/repository/ -> Root CAs -> GTS Root R4, formato PEM)
+SNI: REFERENCIA_DO_PROJETO.supabase.co (sem https://)
+TLS Cert / TLS Key: vazios
+
+TESTE DA REGRA (Try It Out)
+Data Source: Message Publish
+Client ID: teste_g01
+Username: esp32_g01
+Topic: turma/g01/telemetria (substituir t/a)
+QoS: 0
+Payload: testes/payload_mqtt.json (objeto simples, sem topic/reading)
+Saída esperada: testes/resultado_regra_esperado.json
+"reading" dentro de "reading" está incorreto, mesmo com Test Passed.

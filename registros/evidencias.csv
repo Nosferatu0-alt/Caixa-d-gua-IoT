@@ -1,0 +1,8 @@
+teste,distancia_cm,nivel_percent,led,message_id,received_at,resultado
+nivel_alto,20,,,,,
+limite_81cm,81,,,,,
+alerta_90cm,90,,,,,
+duplicata_api,,,,,,
+pausa_rede,,,,,,
+retomada,,,,,,
+persistencia_painel_fechado,,,,,,

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "author": "Caixa d'agua IoT",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": { "env": "micropython-20260406-v1.28.0" }
+    },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "ultra",
+      "top": -60,
+      "left": 250,
+      "attrs": { "distance": "60" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led",
+      "top": 200,
+      "left": 270,
+      "attrs": { "color": "red", "label": "Alerta" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rled",
+      "top": 148,
+      "left": 210,
+      "rotate": 90,
+      "attrs": { "value": "330" }
+    }
+  ],
+  "connections": [
+    [ "esp:5V", "ultra:VCC", "red", [] ],
+    [ "esp:GND.1", "ultra:GND", "black", [] ],
+    [ "esp:5", "ultra:TRIG", "green", [] ],
+    [ "esp:18", "ultra:ECHO", "blue", [] ],
+    [ "esp:19", "rled:1", "orange", [] ],
+    [ "rled:2", "led:A", "orange", [] ],
+    [ "led:C", "esp:GND.1", "black", [] ]
+  ],
+  "serialMonitor": { "display": "always", "newline": "lf" }
+}

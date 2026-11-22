@@ -1,0 +1,9 @@
+{
+  "device_id": "g01",
+  "message_id": "teste-api-g01-001",
+  "metric": "water_level",
+  "unit": "%",
+  "level_percent": 55.0,
+  "distance_cm": 47.8,
+  "alert": false
+}

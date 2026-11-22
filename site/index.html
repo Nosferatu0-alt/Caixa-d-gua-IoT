@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caixa d’água · monitoramento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10303b; --muted:#56727b; --paper:#f1f6f5; --card:#ffffff; --line:#cddcde;
+  --water:#2a8fb0; --deep:#0b5c7a; --alert:#c93a1e; --alert-bg:#fbe7e2;
+  --stale:#8a5a00; --stale-bg:#fcf0d2; --ok:#17715a; --ok-bg:#dff3ec;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+header,main,footer{max-width:1040px;margin:0 auto;padding:0 20px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding-top:24px;padding-bottom:8px}
+h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.01em}
+.controls{display:flex;gap:8px;align-items:center}
+label{color:var(--muted);font-size:.9rem}
+input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;width:8.5rem;background:#fff;color:var(--ink)}
+button{font:inherit;font-weight:600;padding:8px 14px;border:0;border-radius:8px;background:var(--deep);color:#fff;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.banner{margin:12px 0;padding:12px 16px;border-radius:10px;font-weight:600;display:none}
+.banner.on{display:block}
+.banner.stale{background:var(--stale-bg);color:var(--stale)}
+.banner.error{background:var(--alert-bg);color:var(--alert)}
+.hero{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:28px;margin-top:8px;align-items:center}
+.tank{width:100%;height:auto;display:block}
+.tank .shell{fill:#e4eef0}
+.tank .outline{fill:none;stroke:var(--ink);stroke-width:3}
+.tank .water{fill:var(--water);transition:y .8s ease,height .8s ease,fill .4s}
+.tank.low .water{fill:var(--alert)}
+.tank.stale .water{fill:#8fb4c0}
+.tank .limit{stroke:var(--alert);stroke-width:2;stroke-dasharray:6 5}
+.tank text{font-size:12px;fill:var(--alert)}
+.level{font-size:clamp(3.4rem,10vw,6rem);font-weight:800;letter-spacing:-.03em;line-height:1}
+.level small{font-size:.4em;font-weight:600;color:var(--muted);margin-left:.1em}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:16px 0;color:var(--muted)}
+.meta dd{margin:0;color:var(--ink);font-weight:600}
+.status{display:inline-block;padding:8px 14px;border-radius:999px;font-weight:700}
+.status.ok{background:var(--ok-bg);color:var(--ok)}
+.status.alert{background:var(--alert-bg);color:var(--alert)}
+.status.stale{background:var(--stale-bg);color:var(--stale)}
+.status.none{background:#e6eef0;color:var(--muted)}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:24px 0}
+h2{font-size:1.05rem;margin:0 0 10px}
+#chart{width:100%;height:220px;display:block}
+#chart .axis{stroke:var(--line)} #chart .thr{stroke:var(--alert);stroke-dasharray:5 4}
+#chart .line{fill:none;stroke:var(--deep);stroke-width:2.2}
+#chart .dot.alert{fill:var(--alert)} #chart .dot{fill:var(--deep)}
+#chart text{font-size:11px;fill:var(--muted)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600}
+tr.alert td{color:var(--alert);font-weight:600}
+footer{color:var(--muted);font-size:.85rem;padding-bottom:32px}
+@media (max-width:720px){.hero{grid-template-columns:1fr}.tank{max-width:240px;margin:0 auto}}
+@media (prefers-reduced-motion:reduce){.tank .water{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Caixa d’água · nível em tempo real</h1>
+  <div class="controls">
+    <label for="dev">Dispositivo</label>
+    <input id="dev" autocomplete="off" spellcheck="false">
+    <button id="go" type="button">Consultar</button>
+  </div>
+</header>
+
+<main>
+  <div id="banner" class="banner" role="status"></div>
+
+  <div class="hero">
+    <svg id="tank" class="tank" viewBox="0 0 270 300" role="img" aria-label="Nível da caixa d’água">
+      <defs><clipPath id="clip"><rect x="30" y="20" width="160" height="250" rx="10"/></clipPath></defs>
+      <rect class="shell" x="30" y="20" width="160" height="250" rx="10"/>
+      <g clip-path="url(#clip)"><rect id="water" class="water" x="30" y="270" width="160" height="0"/></g>
+      <rect class="outline" x="30" y="20" width="160" height="250" rx="10"/>
+      <line id="limit" class="limit" x1="22" x2="196"/>
+      <text id="limitTxt" x="200" dy="4"></text>
+    </svg>
+
+    <div>
+      <div class="level"><span id="level">—</span><small id="unit">%</small></div>
+      <dl class="meta">
+        <dt>Distância até a água</dt><dd id="dist">—</dd>
+        <dt>Última atualização</dt><dd id="when">—</dd>
+        <dt>Dispositivo / grandeza</dt><dd id="who">—</dd>
+      </dl>
+      <span id="status" class="status none">Aguardando dados</span>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Histórico do nível (últimas leituras)</h2>
+    <svg id="chart" viewBox="0 0 700 220" preserveAspectRatio="none" role="img" aria-label="Gráfico do histórico"></svg>
+  </section>
+
+  <section class="card">
+    <h2>Leituras recentes</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Horário</th><th>Nível</th><th>Distância</th><th>Alerta</th><th>message_id</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="5">Sem dados.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Os dados vêm da API REST do Supabase (tabela <code>readings</code>), gravada pela função <code>ingest</code>.
+  Dados considerados desatualizados após <span id="stalecfg"></span> s sem nova leitura.
+</footer>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  const cfg = window.LAB_CONFIG || {};
+  const $ = id => document.getElementById(id);
+  const fmt = (n, d=1) => Number(n).toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+  const NS = "http://www.w3.org/2000/svg";
+  let rows = [];            // mais recente primeiro
+  let apiOk = true;
+  let timer = null;
+
+  $("dev").value = cfg.deviceId || "g01";
+  $("stalecfg").textContent = cfg.staleAfterSeconds;
+
+  async function load(){
+    const dev = $("dev").value.trim();
+    if(!dev) return;
+    const url = cfg.supabaseUrl + "/rest/v1/readings"
+      + "?select=message_id,metric,unit,level_percent,distance_cm,alert,received_at"
+      + "&device_id=eq." + encodeURIComponent(dev)
+      + "&order=received_at.desc&limit=" + (cfg.historyLimit || 60);
+    try{
+      const res = await fetch(url,{headers:{apikey:cfg.publicKey},signal:AbortSignal.timeout(8000)});
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      rows = await res.json();
+      apiOk = true;
+    }catch(e){
+      apiOk = false;
+      console.error("Falha na API", e);
+    }
+    render();
+  }
+
+  function ageSeconds(r){ return (Date.now() - new Date(r.received_at).getTime())/1000; }
+  function humanAge(s){
+    s = Math.max(0, Math.round(s));
+    if(s < 60) return s + " s";
+    if(s < 3600) return Math.floor(s/60) + " min " + (s%60) + " s";
+    return Math.floor(s/3600) + " h " + Math.floor((s%3600)/60) + " min";
+  }
+
+  function render(){
+    const banner = $("banner"), tank = $("tank"), status = $("status");
+    banner.className = "banner";
+    if(!apiOk){
+      banner.textContent = "Não foi possível consultar a API. Tentando novamente…";
+      banner.className = "banner error on";
+    }
+    const last = rows[0];
+    if(!last){
+      $("level").textContent = "—"; $("dist").textContent = "—"; $("when").textContent = "—"; $("who").textContent = "—";
+      status.className = "status none"; status.textContent = "Nenhuma leitura para este dispositivo";
+      setWater(0, false, true);
+      $("rows").innerHTML = '<tr><td colspan="5">Sem dados.</td></tr>';
+      drawChart([]);
+      return;
+    }
+    const age = ageSeconds(last);
+    const stale = age > cfg.staleAfterSeconds;
+    $("level").textContent = fmt(last.level_percent);
+    $("unit").textContent = last.unit || "%";
+    $("dist").textContent = fmt(last.distance_cm) + " cm";
+    $("when").textContent = new Date(last.received_at).toLocaleString("pt-BR") + " (há " + humanAge(age) + ")";
+    $("who").textContent = $("dev").value.trim() + " · " + (last.metric || "water_level");
+
+    if(stale){
+      status.className = "status stale"; status.textContent = "Dados desatualizados";
+      if(apiOk){
+        banner.textContent = "Sem leituras novas há " + humanAge(age) + ". O valor exibido é o último recebido; a transmissão pode ter sido interrompida.";
+        banner.className = "banner stale on";
+      }
+    }else if(last.alert){
+      status.className = "status alert"; status.textContent = "ALERTA: nível abaixo de " + cfg.alertThreshold + " %";
+    }else{
+      status.className = "status ok"; status.textContent = "Nível normal";
+    }
+    setWater(last.level_percent, last.alert, stale);
+
+    $("rows").replaceChildren(...rows.slice(0,12).map(r=>{
+      const tr = document.createElement("tr");
+      if(r.alert) tr.className = "alert";
+      [new Date(r.received_at).toLocaleTimeString("pt-BR"), fmt(r.level_percent)+" %", fmt(r.distance_cm)+" cm", r.alert ? "Sim" : "Não", r.message_id]
+        .forEach(t=>{ const td = document.createElement("td"); td.textContent = t; tr.appendChild(td); });
+      return tr;
+    }));
+    drawChart(rows.slice().reverse());
+  }
+
+  function setWater(pct, alert, stale){
+    const top = 20, h = 250, bottom = top + h;
+    const wh = h * Math.max(0, Math.min(100, pct)) / 100;
+    const w = $("water");
+    w.setAttribute("y", bottom - wh); w.setAttribute("height", wh);
+    $("tank").setAttribute("class", "tank" + (alert ? " low" : "") + (stale ? " stale" : ""));
+    const ly = bottom - h * cfg.alertThreshold / 100;
+    const l = $("limit"); l.setAttribute("y1", ly); l.setAttribute("y2", ly);
+    const t = $("limitTxt"); t.setAttribute("y", ly); t.textContent = cfg.alertThreshold + " %";
+  }
+
+  function el(name, attrs){ const e = document.createElementNS(NS, name); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  function drawChart(data){
+    const svg = $("chart"); svg.replaceChildren();
+    const W=700,H=220,L=36,R=10,T=10,B=22;
+    const y = v => T + (H-T-B) * (1 - v/100);
+    [0,20,50,100].forEach(v=>{
+      svg.appendChild(el("line",{class: v===20 ? "thr" : "axis", x1:L, x2:W-R, y1:y(v), y2:y(v)}));
+      const t = el("text",{x:4,y:y(v)+4}); t.textContent = v + "%"; svg.appendChild(t);
+    });
+    if(data.length < 1) return;
+    const x = i => L + (W-L-R) * (data.length === 1 ? 0.5 : i/(data.length-1));
+    svg.appendChild(el("polyline",{class:"line", points:data.map((r,i)=>x(i)+","+y(r.level_percent)).join(" ")}));
+    data.forEach((r,i)=>{ if(data.length <= 60) svg.appendChild(el("circle",{class:"dot"+(r.alert?" alert":""), cx:x(i), cy:y(r.level_percent), r:3})); });
+    const a = el("text",{x:L,y:H-6}); a.textContent = new Date(data[0].received_at).toLocaleTimeString("pt-BR"); svg.appendChild(a);
+    const b = el("text",{x:W-R,y:H-6,"text-anchor":"end"}); b.textContent = new Date(data[data.length-1].received_at).toLocaleTimeString("pt-BR"); svg.appendChild(b);
+  }
+
+  function start(){
+    clearInterval(timer);
+    load();
+    timer = setInterval(load, (cfg.refreshSeconds || 5) * 1000);
+  }
+  $("go").addEventListener("click", start);
+  $("dev").addEventListener("keydown", e => { if(e.key === "Enter") start(); });
+  setInterval(()=>{ if(rows.length) render(); }, 1000);  // atualiza "há X s" e o estado de desatualizado
+  start();
+})();
+</script>
+</body>
+</html>
