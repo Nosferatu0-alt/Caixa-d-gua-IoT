@@ -1,11 +1,11 @@
 Projeto EMQX: aula13-iot-g01
 Deployment Serverless: iot-g01
 Usuário MQTT: esp32_g01
-Tópico permitido (Publish/Allow): turma/g01/telemetria
+Tópico permitido (Publish/Allow):caixadagua/g01/nivel
 Fallback All Users: # / Publish & Subscribe / Deny
 Conector: supabase_http_g01
 URL do conector: https://REFERENCIA_DO_PROJETO.supabase.co
-Regra (nome/descrição): telemetria_g01
+Regra (nome/descrição): caixadagua_01
 Ação: post_ingest_g01
 Método: POST
 URL Path: /functions/v1/ingest
@@ -23,7 +23,7 @@ TESTE DA REGRA (Try It Out)
 Data Source: Message Publish
 Client ID: teste_g01
 Username: esp32_g01
-Topic: turma/g01/telemetria (substituir t/a)
+Topic: caixadagua/g01/nivel(substituir t/a)
 QoS: 0
 Payload: testes/payload_mqtt.json (objeto simples, sem topic/reading)
 Saída esperada: testes/resultado_regra_esperado.json
