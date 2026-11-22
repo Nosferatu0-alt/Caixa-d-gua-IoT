@@ -1,17 +1,14 @@
 MAPA PÚBLICO DO AMBIENTE - preencher após cada etapa
-Grupo/device_id: g01
-Repositório GitHub:
-Supabase projeto: aula13-iot-g01
+Grupo/device_id: 
+Supabase projeto: 
 Supabase Project URL:
 Supabase chave publishable (pública):
 Endpoint POST: https://SEU_PROJECT_REF.supabase.co/functions/v1/ingest
 Endpoint GET: https://SEU_PROJECT_REF.supabase.co/rest/v1/readings?device_id=eq.g01&order=received_at.desc&limit=20
-EMQX projeto: aula13-iot-g01 / deployment: iot-g01
+EMQX projeto:
 EMQX domínio (sem mqtts://):
-MQTT usuário: esp32_g01 | tópico: turma/g01/telemetria | porta 8883
+MQTT usuário: esp32_g01 | tópico: caixadagua/g01/nivel | porta 8883
 Conector EMQX: supabase_http_g01 | Regra: telemetria_g01 | Ação: post_ingest_g01
 Wokwi URL:
 Cloudflare Pages URL:
-Vídeo (YouTube não listado):
-Data e resultado do teste completo:
 NÃO escrever senhas, INGEST_KEY, sb_secret ou service_role neste arquivo.
